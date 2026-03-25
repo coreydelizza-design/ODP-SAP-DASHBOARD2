@@ -28,6 +28,7 @@ const blankOppty = () => ({
   qualification: {
     decisionMaking: [0,0,0,0], valueProp: [0,0,0,0],
     productOps: [0,0,0,0], commercialRisk: [0,0,0,0],
+    compellingEvent: [0,0,0,0],
   },
   collabPlan: [{ event:"", weekOf:"", done:false, responsible:"", resources:"", goNoGo:"", billable:"" }],
 });
@@ -218,6 +219,7 @@ const QQ = {
   valueProp:["Compelling events identified & verified","Customer agrees GTT delivers outcome","Value is differentiated","GTT invited to negotiate"],
   productOps:["Can win with standard solution","Standard processes sufficient","Can meet delivery timeline","Low product dev requirements"],
   commercialRisk:["Passes financial hurdles","Credit & payment risk is low","Can invoice with existing systems","Commercial terms acceptable"],
+  compellingEvent:["Quantified financial impact of inaction is confirmed","Sponsor's career, credibility, or role depends on outcome","Hard deadline exists that cannot be moved","Operational disruption or competitive loss without action"],
 };
 
 // ── SECTION COMPONENTS ──
@@ -795,24 +797,55 @@ const OpptyHealthInner = ({ oppty:o, setOppty:so }) => {
 };
 const OpptyHealth = withOppty(OpptyHealthInner);
 
+const CE_DIMS = [
+  { l:"Financial Impact", desc:"Budget expiration, revenue at risk, cost escalation, or penalty if they don't act" },
+  { l:"Career & Political Risk", desc:"Sponsor's credibility, promotion, or role depends on delivering this outcome" },
+  { l:"Hard Deadline", desc:"Contract expiry, regulatory mandate, board commitment, or go-live date that can't move" },
+  { l:"Operational Consequence", desc:"Service disruption, security exposure, competitive displacement, or degradation without action" },
+];
+const CE_LABELS = ["Not assessed","Absent","Anecdotal","Acknowledged","Confirmed","Verified & quantified"];
+const CE_COACHING = [
+  [0,3,"Compelling event is weak — high risk the deal stalls or goes dark. Focus next call on uncovering why the customer must act now."],
+  [4,7,"Early-stage compelling event — need to deepen discovery around urgency drivers. Probe financial impact and deadlines."],
+  [8,11,"Developing compelling event — some urgency confirmed but gaps remain. Prioritize validating the weakest dimensions."],
+  [12,15,"Solid compelling event with key drivers validated. Continue to reinforce urgency and connect solution to timeline."],
+  [16,20,"Strong compelling event across multiple dimensions — this deal has urgency and mandate. Leverage this in every interaction."],
+];
+
 const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
   const q=o.qualification;
-  const sc=k=>q[k].reduce((a,b)=>a+b,0);
-  const tot=sc("decisionMaking")+sc("valueProp")+sc("productOps")+sc("commercialRisk");
-  const scaled=Math.round((tot/80)*100);
-  const hc=scaled<60?C.red:scaled<80?C.amber:C.green;
-  const hl=scaled<60?"Poor":scaled<80?"Improvement Needed":"Strong";
+  const ce = q.compellingEvent || [0,0,0,0];
+  const sc=k=>k==="compellingEvent"?ce.reduce((a,b)=>a+b,0):(q[k]||[0,0,0,0]).reduce((a,b)=>a+b,0);
+  const tot=sc("decisionMaking")+sc("valueProp")+sc("productOps")+sc("commercialRisk")+sc("compellingEvent");
+  const scaled=Math.round((tot/100)*100);
+  const hc=scaled<50?C.red:scaled<70?C.amber:C.green;
+  const hl=scaled<50?"Poor":scaled<70?"Improvement Needed":"Strong";
+
+  const ceScore = ce.reduce((a,b)=>a+b,0);
+  const cePct = ceScore/20;
+  const ceColor = cePct<0.4?C.red:cePct<0.7?C.amber:C.green;
+  const ceLabel = ceScore===0?"Not Identified":cePct<0.4?"Weak":cePct<0.7?"Developing":"Verified & Strong";
+  const ceCoach = (CE_COACHING.find(([lo,hi])=>ceScore>=lo&&ceScore<=hi)||CE_COACHING[0])[2];
+
+  const setCe = (qi,v) => {
+    const nq = { ...q, compellingEvent: [...ce] };
+    nq.compellingEvent[qi] = v;
+    so("qualification", nq);
+  };
+
   return (
     <div>
       <SH title="Qualification & Insights" description={o.name||"Score each dimension."} />
+
+      {/* Summary Card */}
       <Card style={{ textAlign:"center", padding:32 }}>
         <Badge color={hc}>{hl}</Badge>
         <div style={{ fontSize:48, fontWeight:900, fontFamily:FM, color:hc, lineHeight:1, marginTop:12 }}>{scaled}</div>
         <div style={{ fontSize:13, color:C.textMuted, marginTop:6 }}>Qualification Score — {o.name||"Untitled"}</div>
-        <div style={{ display:"flex", justifyContent:"center", gap:20, marginTop:20 }}>
-          {[{l:"Decision",k:"decisionMaking"},{l:"Value Prop",k:"valueProp"},{l:"Product/Ops",k:"productOps"},{l:"Commercial",k:"commercialRisk"}].map(x=>{
+        <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:20, flexWrap:"wrap" }}>
+          {[{l:"Decision",k:"decisionMaking"},{l:"Value Prop",k:"valueProp"},{l:"Product/Ops",k:"productOps"},{l:"Commercial",k:"commercialRisk"},{l:"Compelling",k:"compellingEvent"}].map(x=>{
             const s=sc(x.k);const p=s/20;const col=p<0.5?C.red:p<0.75?C.amber:C.green;
-            return (<div key={x.k} style={{ minWidth:100 }}>
+            return (<div key={x.k} style={{ minWidth:90 }}>
               <div style={{ fontSize:22, fontWeight:800, fontFamily:FM, color:col }}>{s}<span style={{ fontSize:12, color:C.textDim }}>/20</span></div>
               <div style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>{x.l}</div>
               <div style={{ height:6, background:C.bg, borderRadius:3, marginTop:6, overflow:"hidden" }}><div style={{ height:"100%", width:`${p*100}%`, background:col, borderRadius:3 }} /></div>
@@ -820,12 +853,68 @@ const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
           })}
         </div>
       </Card>
+
+      {/* Compelling Event — Featured Card */}
+      <Card accent={ceColor} style={{ padding:0, overflow:"hidden" }}>
+        <div style={{ background:`linear-gradient(135deg, ${ceColor}11, ${ceColor}06)`, padding:"20px 24px" }}>
+          {/* Header */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+                <span style={{ fontSize:17, fontWeight:800, color:C.white, fontFamily:F }}>Compelling Event</span>
+                <Badge color={ceColor}>{ceLabel}</Badge>
+              </div>
+              <div style={{ fontSize:12, color:C.textDim, fontFamily:F }}>Why must the customer act now?</div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontSize:32, fontWeight:900, fontFamily:FM, color:ceColor, lineHeight:1 }}>{ceScore}</div>
+              <div style={{ fontSize:12, color:C.textDim, fontFamily:FM }}>/ 20</div>
+            </div>
+          </div>
+
+          {/* 2×2 Dimension Grid */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+            {CE_DIMS.map((dim,qi)=>{
+              const val = ce[qi]||0;
+              const dimCol = val<=1?C.red:val<=3?C.amber:C.green;
+              return (
+                <div key={qi} style={{ background:C.bg, borderRadius:10, border:`1px solid ${C.border}`, padding:"14px 16px", transition:"border-color 0.15s" }}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor=`${ceColor}66`}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:2 }}>
+                    <span style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:F }}>{dim.l}</span>
+                    <span style={{ fontSize:18, fontWeight:800, color:dimCol, fontFamily:FM }}>{val}</span>
+                  </div>
+                  <div style={{ fontSize:11, color:C.textDim, fontFamily:F, marginBottom:8, lineHeight:1.4 }}>{dim.desc}</div>
+                  <div style={{ height:4, background:C.surface, borderRadius:2, overflow:"hidden", marginBottom:8 }}>
+                    <div style={{ height:"100%", width:`${(val/5)*100}%`, background:dimCol, borderRadius:2, transition:"width 0.3s" }} />
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:dimCol, fontFamily:F }}>{CE_LABELS[val]||"—"}</span>
+                    <ScorePill value={val} onChange={v=>setCe(qi,v)} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Assessment Panel */}
+          {ceScore>0 && (
+            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px" }}>
+              <div style={{ fontSize:10, fontWeight:700, color:ceColor, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, fontFamily:F }}>Compelling Event Assessment</div>
+              <div style={{ fontSize:12, color:C.textMuted, fontFamily:F, lineHeight:1.6 }}>{ceCoach}</div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Existing 4 Category Cards */}
       {[{k:"decisionMaking",l:"Decision Making Process",c:C.accent},{k:"valueProp",l:"GTT Value Proposition",c:C.green},{k:"productOps",l:"Product & Operations",c:C.purple},{k:"commercialRisk",l:"Commercial Risk",c:C.amber}].map(cat=>(
         <Card key={cat.k} title={cat.l} accent={cat.c}>
           {QQ[cat.k].map((question,qi)=>(
             <div key={qi} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:qi<QQ[cat.k].length-1?`1px solid ${C.border}22`:"none" }}>
               <span style={{ fontSize:13, color:C.text, fontFamily:F, flex:1 }}>{question}</span>
-              <ScorePill value={q[cat.k][qi]} onChange={v=>{const nq={...q};nq[cat.k]=[...nq[cat.k]];nq[cat.k][qi]=v;so("qualification",nq);}} />
+              <ScorePill value={(q[cat.k]||[0,0,0,0])[qi]} onChange={v=>{const nq={...q};nq[cat.k]=[...(nq[cat.k]||[0,0,0,0])];nq[cat.k][qi]=v;so("qualification",nq);}} />
             </div>
           ))}
         </Card>
