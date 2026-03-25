@@ -25,6 +25,7 @@ const blankOppty = () => ({
   sellingPartner: "", tsd: "", subAgent: "",
   health: { pain: 0, power: 0, vision: 0, value: 0, consensus: 0 },
   healthSnapshots: [],
+  healthNotes: { pain:"", power:"", vision:"", value:"", consensus:"" },
   qualification: {
     decisionMaking: [0,0,0,0], valueProp: [0,0,0,0],
     productOps: [0,0,0,0], commercialRisk: [0,0,0,0],
@@ -790,6 +791,12 @@ const OpptyHealthInner = ({ oppty:o, setOppty:so }) => {
                 color:h[dim.k]===lvl?dim.c:C.textDim, fontWeight:h[dim.k]===lvl?700:400,
               }}><span style={{ fontFamily:FM, marginRight:4 }}>{lvl}</span> {label}</button>
             ))}
+          </div>
+          <div style={{ marginTop:12 }}>
+            <label style={{ display:"block", fontSize:10, fontWeight:600, color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontFamily:F }}>Notes</label>
+            <textarea value={(o.healthNotes||{})[dim.k]||""} onChange={ev=>so("healthNotes",{...(o.healthNotes||{}),[dim.k]:ev.target.value})} rows={2} placeholder="Evidence, observations, next steps..."
+              style={{ width:"100%", padding:"8px 10px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:6, color:C.text, fontSize:12, fontFamily:F, outline:"none", resize:"vertical", boxSizing:"border-box" }}
+              onFocus={e=>e.target.style.borderColor=dim.c} onBlur={e=>e.target.style.borderColor=C.border} />
           </div>
         </Card>
       ))}
