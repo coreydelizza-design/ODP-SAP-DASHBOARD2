@@ -886,9 +886,6 @@ const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
                     <span style={{ fontSize:18, fontWeight:800, color:dimCol, fontFamily:FM }}>{val}</span>
                   </div>
                   <div style={{ fontSize:11, color:C.textDim, fontFamily:F, marginBottom:8, lineHeight:1.4 }}>{dim.desc}</div>
-                  <div style={{ height:4, background:C.surface, borderRadius:2, overflow:"hidden", marginBottom:8 }}>
-                    <div style={{ height:"100%", width:`${(val/5)*100}%`, background:dimCol, borderRadius:2, transition:"width 0.3s" }} />
-                  </div>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                     <span style={{ fontSize:10, fontWeight:700, color:dimCol, fontFamily:F }}>{CE_LABELS[val]||"—"}</span>
                     <ScorePill value={val} onChange={v=>setCe(qi,v)} />
