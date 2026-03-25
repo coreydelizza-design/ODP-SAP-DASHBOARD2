@@ -29,6 +29,7 @@ const blankOppty = () => ({
     decisionMaking: [0,0,0,0], valueProp: [0,0,0,0],
     productOps: [0,0,0,0], commercialRisk: [0,0,0,0],
     compellingEvent: [0,0,0,0],
+    notes: { decisionMaking:"", valueProp:"", productOps:"", commercialRisk:"", compellingEvent:"" },
   },
   collabPlan: [{ event:"", weekOf:"", done:false, responsible:"", resources:"", goNoGo:"", billable:"" }],
 });
@@ -897,11 +898,18 @@ const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
 
           {/* Assessment Panel */}
           {ceScore>0 && (
-            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px" }}>
+            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px", marginBottom:12 }}>
               <div style={{ fontSize:10, fontWeight:700, color:ceColor, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, fontFamily:F }}>Compelling Event Assessment</div>
               <div style={{ fontSize:12, color:C.textMuted, fontFamily:F, lineHeight:1.6 }}>{ceCoach}</div>
             </div>
           )}
+          {/* Notes */}
+          <div>
+            <label style={{ display:"block", fontSize:10, fontWeight:600, color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontFamily:F }}>Notes</label>
+            <textarea value={(q.notes||{}).compellingEvent||""} onChange={ev=>{const nq={...q,notes:{...(q.notes||{}),compellingEvent:ev.target.value}};so("qualification",nq);}} rows={2} placeholder="Compelling event details, evidence, dates..."
+              style={{ width:"100%", padding:"8px 10px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:6, color:C.text, fontSize:12, fontFamily:F, outline:"none", resize:"vertical", boxSizing:"border-box" }}
+              onFocus={e=>e.target.style.borderColor=ceColor} onBlur={e=>e.target.style.borderColor=C.border} />
+          </div>
         </div>
       </Card>
 
@@ -928,6 +936,12 @@ const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
               </div>
             );
           })}
+          <div style={{ marginTop:12 }}>
+            <label style={{ display:"block", fontSize:10, fontWeight:600, color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontFamily:F }}>Notes</label>
+            <textarea value={(q.notes||{})[cat.k]||""} onChange={ev=>{const nq={...q,notes:{...(q.notes||{}),[cat.k]:ev.target.value}};so("qualification",nq);}} rows={2} placeholder="Key observations, evidence, gaps..."
+              style={{ width:"100%", padding:"8px 10px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:6, color:C.text, fontSize:12, fontFamily:F, outline:"none", resize:"vertical", boxSizing:"border-box" }}
+              onFocus={e=>e.target.style.borderColor=cat.c} onBlur={e=>e.target.style.borderColor=C.border} />
+          </div>
         </Card>
       ))}
     </div>
