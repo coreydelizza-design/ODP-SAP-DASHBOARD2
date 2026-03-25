@@ -721,8 +721,6 @@ export default function App() {
     if(typeof k==="object"&&v===undefined){save({...data,...k});}
     else{save({...data,[k]:v});}
   };
-  const reset = ()=>{setData(defaultData);try{localStorage.removeItem("sap-planner-v2");}catch(e){}};
-
   const renderSection = () => {
     switch(section) {
       case "overview": return <AccountOverview data={data} sf={sf} />;
@@ -773,8 +771,6 @@ export default function App() {
               <div style={{ width:8, height:8, borderRadius:"50%", background:saving?C.amber:C.green, transition:"background 0.3s" }} />
               <span style={{ fontSize:11, color:C.textDim }}>{saving?"Saving...":"Auto-saved"}</span>
             </div>
-            <button onClick={reset} style={{ width:"100%", padding:"7px 12px", background:"none", border:`1px solid ${C.border}`, borderRadius:6, color:C.textDim, fontSize:11, cursor:"pointer", fontFamily:F }}
-              onMouseEnter={e=>{e.target.style.borderColor=C.red;e.target.style.color=C.red;}} onMouseLeave={e=>{e.target.style.borderColor=C.border;e.target.style.color=C.textDim;}}>Reset All Data</button>
           </div>
         )}
       </div>
