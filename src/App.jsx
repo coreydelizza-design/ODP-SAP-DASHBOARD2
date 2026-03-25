@@ -911,12 +911,26 @@ const OpptyInsightsInner = ({ oppty:o, setOppty:so }) => {
       {/* Existing 4 Category Cards */}
       {[{k:"decisionMaking",l:"Decision Making Process",c:C.accent},{k:"valueProp",l:"GTT Value Proposition",c:C.green},{k:"productOps",l:"Product & Operations",c:C.purple},{k:"commercialRisk",l:"Commercial Risk",c:C.amber}].map(cat=>(
         <Card key={cat.k} title={cat.l} accent={cat.c}>
-          {QQ[cat.k].map((question,qi)=>(
-            <div key={qi} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:qi<QQ[cat.k].length-1?`1px solid ${C.border}22`:"none" }}>
-              <span style={{ fontSize:13, color:C.text, fontFamily:F, flex:1 }}>{question}</span>
-              <ScorePill value={(q[cat.k]||[0,0,0,0])[qi]} onChange={v=>{const nq={...q};nq[cat.k]=[...(nq[cat.k]||[0,0,0,0])];nq[cat.k][qi]=v;so("qualification",nq);}} />
-            </div>
-          ))}
+          <div style={{ display:"flex", gap:4, marginBottom:12, flexWrap:"wrap" }}>
+            {["Not assessed","Disagree","Slightly disagree","Neutral","Slightly agree","Strongly agree"].map((lbl,i)=>{
+              const lc=i<=1?C.red:i<=3?C.amber:C.green;
+              return <span key={i} style={{ fontSize:9, fontFamily:F, color:lc, padding:"2px 6px", borderRadius:4, background:`${lc}11`, border:`1px solid ${lc}22` }}>{i} = {lbl}</span>;
+            })}
+          </div>
+          {QQ[cat.k].map((question,qi)=>{
+            const val=(q[cat.k]||[0,0,0,0])[qi];
+            const vCol=val<=1?C.red:val<=3?C.amber:C.green;
+            const vLabel=["Not assessed","Disagree","Slightly disagree","Neutral","Slightly agree","Strongly agree"][val]||"";
+            return (
+              <div key={qi} style={{ padding:"10px 0", borderBottom:qi<QQ[cat.k].length-1?`1px solid ${C.border}22`:"none" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:13, color:C.text, fontFamily:F, flex:1 }}>{question}</span>
+                  <ScorePill value={val} onChange={v=>{const nq={...q};nq[cat.k]=[...(nq[cat.k]||[0,0,0,0])];nq[cat.k][qi]=v;so("qualification",nq);}} />
+                </div>
+                {val>0 && <div style={{ fontSize:10, fontWeight:600, color:vCol, fontFamily:F, marginTop:4, textAlign:"right" }}>{vLabel}</div>}
+              </div>
+            );
+          })}
         </Card>
       ))}
     </div>
